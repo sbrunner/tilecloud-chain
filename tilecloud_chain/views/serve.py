@@ -38,33 +38,71 @@ class Serve(TileGeneration):
 
     def __init__(self, request):
         self.request = request
-        self.settings = request.registry.settings['tilegeneration']
+        self.settings = request.registry.settings
 
-        self.tilegeneration = TileGeneration(self.settings['configfile'])
+        self.tilegeneration = TileGeneration(self.settings['tilegeneration_configfile'])
         self.cache = self.tilegeneration.caches[
-            self.settings['cache'] if 'cache' in self.settings
-            else self.settings['generation']['default_cache']
+            self.settings['tilegeneration_cache'] if 'tilegeneration_cache' in self.settings
+            else self.tilegeneration.config['generation']['default_cache']
         ]
         self.stores = {}
         self.strict = 'strict' in self.settings and self.settings['strict']
 
-    @view_config(route_name='serve_tiles')
-    def serve(self):
-        params = {}
-        for param, value in self.request.params.items():
-            params[param.lower()] = value
+    def _get(self, path, cache):
+        if cache['type'] == 's3':  # pragma: no cover
+            s3bucket = S3Connection().bucket(cache['bucket'])
+            s3key = s3bucket.key(('%(folder)s' % cache) + path)
+            return s3key.get().body
+        else:
+            folder = cache['folder'] or ''
+            filename = folder + path
+            directory = os.path.dirname(filename)
+            f = open(folder + path, 'rb')
+            data = f.read()
+            f.close()
+            return data
 
-        if \
-                not 'service' in params or \
-                not 'request' in params or \
-                not 'version' in params or \
-                not 'format' in params or \
-                not 'layer' in params or \
-                not 'tilematrixset' in params or \
-                not 'tilematrix' in params or \
-                not 'tilerow' in params or \
-                not 'tilecol' in params:
-            raise HTTPBadRequest("Not all required parameters are present")
+    def __call__(self):
+        params = {}
+        dimensions = None
+        if 'path' in self.request.matchdict:
+            path = self.request.matchdict['path']
+            if len(path) < 7:
+                if '/'.join(path) == cache['wmtscapabilities_file'][1:]:
+                    self.request.response.body_file = self._get(cache['wmtscapabilities_file'])
+                    self.request.response.content_type = "application/xml"
+                    return
+                else:
+                    raise HTTPBadRequest("Not enough path")
+            else:
+                params['service'] = 'WMTS'
+                params['request'] = 'GetTile'
+                params['version'] = path[0]
+
+                last = path[-1].split('.')
+                params['format'] = last[1]
+                params['layer'] = path[1]
+                params['style'] = path[2]
+                dimensions = [('Dimension', v) for v in path[3:-4]]
+                params['tilematrixset'] = path[-4]
+                params['tilematrix'] = path[-3]
+                params['tilerow'] = path[-2]
+                params['tilecol'] = last[0]
+        else:
+            for param, value in self.request.params.items():
+                params[param.lower()] = value
+
+                if \
+                    not 'service' in params or \
+                    not 'request' in params or \
+                    not 'version' in params or \
+                    not 'format' in params or \
+                    not 'layer' in params or \
+                    not 'tilematrixset' in params or \
+                    not 'tilematrix' in params or \
+                    not 'tilerow' in params or \
+                    not 'tilecol' in params:
+                    raise HTTPBadRequest("Not all required parameters are present")
 
         if self.strict:
             if params['service'] != 'WMTS':
@@ -93,14 +131,16 @@ class Serve(TileGeneration):
             params['tilematrixset'],
             params['format'],
         ]
-        dimensions = []
-        for dimension in layer['dimensions']:
-            value = \
-                params[dimension['name'].lower()] \
-                if dimension['name'].lower() in params \
-                else dimension['default']
-            dimensions.append((dimension['name'], value))
-            store_ref.extend((dimension['name'], value))
+
+        if 'path' not in self.request.matchdict:
+            dimensions = []
+            for dimension in layer['dimensions']:
+                value = \
+                    params[dimension['name'].lower()] \
+                    if dimension['name'].lower() in params \
+                    else dimension['default']
+                dimensions.append((dimension['name'], value))
+                store_ref.extend((dimension['name'], value))
 
         store_ref = '/'.join(store_ref)
         if store_ref in self.stores:
@@ -126,12 +166,13 @@ class Serve(TileGeneration):
         tile = Tile(TileCoord(
             # TODO fix for matrix_identifier = resolution
             int(params['tilematrix']),
+            int(params['tilecol']),
             int(params['tilerow']),
-            int(params['tilecol'])
         ))
         tile = store.get_one(tile)
         if tile:
-            self.request.response.body_file = tile.data
+            self.request.response.body = tile.data
             self.request.response.content_type = tile.content_type
+            return self.request.response
         else:
             raise HTTPNoContent()

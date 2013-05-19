@@ -29,7 +29,7 @@ from tilecloud import Tile, BoundingPyramid, TileCoord
 from tilecloud.grid.free import FreeTileGrid
 from tilecloud.store.metatile import MetaTileSplitterTileStore
 from tilecloud.store.s3 import S3TileStore
-from tilecloud.store.mbtiles import MBTilesTileStore
+from tilecloud.store.mbtiles_view import MBTilesViewTileStore
 from tilecloud.store.filesystem import FilesystemTileStore
 from tilecloud.layout.wmts import WMTSTileLayout
 from tilecloud.filter.error import LogErrors, MaximumConsecutiveErrors, DropErrors
@@ -417,7 +417,7 @@ class TileGeneration:
             url=cache['folder'],
             style=layer['wmts_style'],
             format='.' + layer['extension'],
-            dimensions=dimensions if dimensions else [
+            dimensions=dimensions if dimensions is not None else [
                 (str(dimension['name']), str(dimension['default']))
                 for dimension in layer['dimensions']
             ],
@@ -436,7 +436,8 @@ class TileGeneration:
             ) + '.mbtiles'
             if not os.path.exists(os.path.dirname(filename)):
                 os.makedirs(os.path.dirname(filename))
-            cache_tilestore = MBTilesTileStore(
+            cache_tilestore = MBTilesViewTileStore(
+                True,
                 sqlite3.connect(filename),
                 content_type=layer['mime_type'],
             )

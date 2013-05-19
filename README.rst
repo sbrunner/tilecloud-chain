@@ -75,7 +75,12 @@ Configure caches
 There tree available tiles cache: ``s3``, ``mbtile`` and ``filesystem``.
 
 The best solution to store the tiles is ``s3``, ``mbtiles`` has the advantage to have only one file per
-layer - style  dimensions. To serve the ``mbtile`` there is a view named ``serve_tiles``.
+layer - style  dimensions. To serve the ``mbtile`` there is a view that can be used as following:
+
+..code:: python
+
+    config.add_route('serve_tiles', '/tiles/*path')
+    config.add_view('tilecloud_chain.views.serve:Serve', route_name='serve_tiles')
 
 ``s3`` need a ``bucket`` an a ``folder`` (default to '').
 
