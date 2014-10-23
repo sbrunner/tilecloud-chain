@@ -17,7 +17,7 @@
             </ows:Constraint>
           </ows:Get>{%
           if server %}
-          <ows:Get xlink:href="{{base_urls[0]}}{{base_url_postfix}}">
+          <ows:Get xlink:href="{{server_base_urls[0]}}{{base_url_postfix}}">
             <ows:Constraint name="GetEncoding">
               <ows:AllowedValues>
                 <ows:Value>KVP</ows:Value>
@@ -31,21 +31,53 @@
     <ows:Operation name="GetTile">
       <ows:DCP>
         <ows:HTTP>{%
+          if direct
           for base_url in base_urls %}
+          <ows:Get xlink:href="{{base_url}}">
+            <ows:Constraint name="GetEncoding">
+              <ows:AllowedValues>{%
+                if rest %}
+                <ows:Value>REST</ows:Value>{%
+                endif %}
+              </ows:AllowedValues>
+            </ows:Constraint>
+          </ows:Get>{%
+          endfor
+          endif
+          for base_url in server_base_urls %}
           <ows:Get xlink:href="{{base_url}}{{base_url_postfix}}">
             <ows:Constraint name="GetEncoding">
-              <ows:AllowedValues>
+              <ows:AllowedValues>{%
+                if not direct %}
                 <ows:Value>REST</ows:Value>{%
-                if server %}
-                <ows:Value>KVP</ows:Value>{%
                 endif %}
+                <ows:Value>KVP</ows:Value>
               </ows:AllowedValues>
             </ows:Constraint>
           </ows:Get>{%
           endfor %}
         </ows:HTTP>
       </ows:DCP>
-    </ows:Operation>
+    </ows:Operation>{%
+    if server %}
+    <ows:Operation name="GetFeatureInfo">
+      <ows:DCP>
+        <ows:HTTP>{%
+          for base_url in server_base_urls %}
+          <ows:Get xlink:href="{{base_url}}{{base_url_postfix}}">
+            <ows:Constraint name="GetEncoding">
+              <ows:AllowedValues>
+                <ows:Value>REST</ows:Value>
+                <ows:Value>KVP</ows:Value>
+              </ows:AllowedValues>
+            </ows:Constraint>
+          </ows:Get>{%
+          endfor %}
+        </ows:HTTP>
+      </ows:DCP>
+    </ows:Operation>{%
+    endif %}
+
   </ows:OperationsMetadata>
   <!-- <ServiceMetadataURL xlink:href="" /> -->
   <Contents>

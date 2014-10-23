@@ -192,19 +192,20 @@ def _generate_wmts_capabilities(gene):
                     previous_legend = new_legend
                 previous_resolution = resolution
 
+    direct = not server or gene.config['server']['only_get_feature_info']
     capabilities = jinja2_template(
         pkgutil.get_data("tilecloud_chain", "wmts_get_capabilities.jinja").decode('utf-8'),
         layers=gene.layers,
         grids=gene.grids,
         getcapabilities=urljoin(base_urls[0], (
-            'wmts/1.0.0/WMTSCapabilities.xml' if server
-            else cache['wmtscapabilities_file']
+            cache['wmtscapabilities_file'] if direct else 'wmts/1.0.0/WMTSCapabilities.xml'
         )),
         base_urls=base_urls,
+        server_base_urls=base_urls,
         base_url_postfix='wmts/' if server else '',
         get_tile_matrix_identifier=get_tile_matrix_identifier,
-        server=server,
-        enumerate=enumerate, ceil=math.ceil, int=int, sorted=sorted,
+        server=server, direct=direct,
+        enumerate=enumerate, ceil=math.ceil, int=int, sorted=sorted
     )
     _send(capabilities, cache['wmtscapabilities_file'], 'application/xml', cache)
 
