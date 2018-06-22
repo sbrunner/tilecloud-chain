@@ -18,7 +18,8 @@ RUN \
   mkdir /fonts && \
   mkdir /project && \
   apt-get clean && \
-  rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /root/.cache/*
+  rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /root/.cache/* \
+  adduser www-data root
 
 COPY requirements.txt /app/
 
@@ -30,7 +31,7 @@ ENV TILEGENERATION_CONFIGFILE=/etc/tilegeneration/config.yaml \
     C2CWSGI_LOG_LEVEL=WARN \
     TILECLOUD_LOG_LEVEL=INFO \
     TILECLOUD_CHAIN_LOG_LEVEL=INFO \
-    GUNICORN_PARAMS="-b :80 --worker-class gthread --threads 15 --workers 3" \
+    GUNICORN_PARAMS="--bind=:80 --worker-class=gthread --threads=10 --workers=5 --worker-connections=1000" \
     VISIBLE_ENTRY_POINT=/tiles/
 
 EXPOSE 80
