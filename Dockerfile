@@ -1,7 +1,8 @@
 FROM camptocamp/c2cwsgiutils:3-full
 MAINTAINER Stéphane Brunner <stephane.brunner@camptocamp.com>
 
-COPY requirements.txt nose-timeout /app/
+COPY requirements.txt /app/
+COPY nose-timeout /app/nose-timeout
 RUN \
   DEV_PACKAGES="python3.7-dev build-essential libgeos-dev libmapnik-dev libdb-dev" && \
   apt-get update && \
