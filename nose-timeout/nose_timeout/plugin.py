@@ -59,6 +59,16 @@ class NoseTimeout(Plugin):
 
             def timeout(result):
                 def __handler(signum, frame):
+                    # Thread informations
+                    id2name = dict([(th.ident, th.name) for th in threading.enumerate()])
+                    for thread_id, stack in sys._current_frames().items():  # pylint: disable=W0212
+                        print("Thread", "%s(%d)" % (id2name.get(thread_id, ""), thread_id))
+                        for filename, lineno, name, line in traceback.extract_stack(stack):  # type: ignore
+                            if line:
+                                print(filename, lineno, name, line)
+                            else:
+                                print(filename, lineno, name)
+
                     msg = "Function execution is longer than %s second(s). Aborted." % self.timeout
                     raise TimeoutException(msg)
 
