@@ -60,6 +60,10 @@ class NoseTimeout(Plugin):
             def timeout(result):
                 def __handler(signum, frame):
                     # Thread informations
+                    print("Thread informations")
+                    logger.informations("info")
+                    logger.error("error")
+                    logger.critical("critical")
                     id2name = dict([(th.ident, th.name) for th in threading.enumerate()])
                     for thread_id, stack in sys._current_frames().items():  # pylint: disable=W0212
                         print("Thread", "%s(%d)" % (id2name.get(thread_id, ""), thread_id))
