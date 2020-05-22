@@ -7,3 +7,4 @@
 !tilecloud_chain/*
 !docker/run
 !production.ini
+!nose-timeout
