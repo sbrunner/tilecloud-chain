@@ -44,7 +44,7 @@ jobs:
             sleep 1
           done
 
-          docker-compose --project-name=tilecloud --file=test-docker-compose.yaml exec -T test python setup.py nosetests --logging-filter=tilecloud,tilecloud_chain --attr '!'nopy3 --timeout=90
+          docker-compose --project-name=tilecloud --file=test-docker-compose.yaml exec -T test python setup.py nosetests --logging-filter=tilecloud,tilecloud_chain --attr '!'nopy3 --timeout=140
 
           docker-compose --project-name=tilecloud --file=test-docker-compose.yaml down
 
