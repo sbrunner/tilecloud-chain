@@ -61,7 +61,7 @@ class NoseTimeout(Plugin):
                 def __handler(signum, frame):
                     # Thread informations
                     print("Thread informations")
-                    logger.informations("info")
+                    logger.info("info")
                     logger.error("error")
                     logger.critical("critical")
                     id2name = dict([(th.ident, th.name) for th in threading.enumerate()])
