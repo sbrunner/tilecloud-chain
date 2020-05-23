@@ -72,7 +72,7 @@ class NoseTimeout(Plugin):
                                 print(filename, lineno, name, line)
                             else:
                                 print(filename, lineno, name)
-
+                    sys.stdout.flush()
                     msg = "Function execution is longer than %s second(s). Aborted." % self.timeout
                     raise TimeoutException(msg)
 
