@@ -168,6 +168,9 @@ class Run:
             return
 
         tilecoord = tile.tilecoord
+        if str(tilecoord) == "0/4/5":
+            print("ARG")
+            assert False, "ARG"
         logger.debug("[%s] Metadata: %s", tilecoord, tile.metadata)
         for func in self.functions:
             try:
