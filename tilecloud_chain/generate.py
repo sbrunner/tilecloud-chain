@@ -388,7 +388,6 @@ class Generate:
             )
 
     def _get_tilestore_for_layer(self, layer):
-        assert self._cache_tilestore is not None
         if layer["type"] == "wms":
             params = layer["params"].copy()
             if "STYLES" not in params:
